@@ -47,14 +47,19 @@ impl Snake {
         false
     }
 
-    pub fn change_direction(&mut self, dir: Direction) {
+    pub fn change_direction(&mut self, dir: Direction, size: (u16, u16)) {
+        let (w, h) = size;
         let head = self.body.get(0).unwrap();
         if let Some(second) = self.body.get(1) {
             if self.dir == dir
                 || matches!(dir, Direction::Up) && second.1 + 1 == head.1 && second.0 == head.0
-                || matches!(dir, Direction::Down) && second.1 - 1 == head.1 && second.0 == head.0
+                || matches!(dir, Direction::Down)
+                    && second.1.checked_sub(1).unwrap_or(0) == head.1
+                    && second.0 == head.0
                 || matches!(dir, Direction::Left) && second.0 + 1 == head.0 && second.1 == head.1
-                || matches!(dir, Direction::Right) && second.0 - 1 == head.0 && second.1 == head.1
+                || matches!(dir, Direction::Right)
+                    && second.0.checked_sub(1).unwrap_or(0) == head.0
+                    && second.1 == head.1
             {
                 return;
             }
@@ -78,17 +83,17 @@ impl Snake {
         let (w, h) = (size.0 - 1, size.1 - 1);
         let mut last_pos = head.clone();
         match self.dir {
-            Direction::Up => head.1 = head.1.checked_sub(1).unwrap_or(h - 1),
+            Direction::Up => head.1 = head.1.checked_sub(1).unwrap_or(h),
             Direction::Down => {
                 head.1 += 1;
-                if head.1 >= h {
+                if head.1 > h {
                     head.1 = 0
                 }
             }
-            Direction::Left => head.0 = head.0.checked_sub(1).unwrap_or(w - 1),
+            Direction::Left => head.0 = head.0.checked_sub(1).unwrap_or(w),
             Direction::Right => {
                 head.0 += 1;
-                if head.0 >= w {
+                if head.0 > w {
                     head.0 = 0
                 }
             }
