@@ -15,19 +15,19 @@ use std::time::Duration;
 mod snake;
 use snake::{draw_food, Direction, Pos, Snake};
 
-const FPS: u64 = 15;
-
 fn rand_pos(rng: &mut impl Rng, max_w: u16, max_h: u16) -> Pos {
     Pos(rng.gen::<u16>() % max_w, rng.gen::<u16>() % max_h)
 }
 
-fn draw_score(out: &mut Stdout, score: usize) {
+fn draw_score(out: &mut Stdout, score: usize, fps: u16) {
     use crossterm::{cursor::MoveTo, style::Print};
     queue!(out, MoveTo(0, 0)).unwrap();
     queue!(out, Print(format!("Score: {}", score))).unwrap();
+    queue!(out, Print(format!("FPS: {}", fps))).unwrap();
 }
 
 fn main() -> Result<()> {
+    let mut fps = 10u16;
     let mut rng = thread_rng();
     let mut out = stdout();
     enable_raw_mode()?;
@@ -61,6 +61,9 @@ fn main() -> Result<()> {
         let out_ = player.update(&food, (max_w, max_h));
         if let Ok(true) = out_ {
             score += 1;
+            if score % 2 == 0 {
+                fps += 1;
+            }
             food = rand_pos(&mut rng, side, side);
         };
         if let Err(_) = out_ {
@@ -68,13 +71,13 @@ fn main() -> Result<()> {
         };
 
         queue!(out, Clear(ClearType::All))?;
-        draw_score(&mut out, score);
+        draw_score(&mut out, score, fps);
         draw_food(&mut out, &food)?;
         player.draw(&mut out)?;
 
         out.flush()?;
 
-        sleep(Duration::from_millis(1000 / FPS));
+        sleep(Duration::from_millis((1000 / fps) as u64));
     }
 
     execute!(out, LeaveAlternateScreen)?;
